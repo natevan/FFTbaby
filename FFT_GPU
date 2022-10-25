@@ -58,7 +58,7 @@ int main(void) {
   double real_sample[SIZE] = {3.6, 2.9, 5.6, 4.8, 3.3, 5.9, 5.0, 4.3};
   double imag_sample[SIZE] = {2.6, 6.3, 4.0, 9.1, 0.4, 4.8, 2.6, 4.1};
 
-  double *real_sample_d, imag_sample_d, *k_vector_real_d, k_vector_imag_d;
+  double *real_sample_d, *imag_sample_d, *k_vector_real_d, *k_vector_imag_d;
   int size_d = SIZE * sizeof(double);
 
   cudaMalloc((void**) &real_sample_d, size_d);
