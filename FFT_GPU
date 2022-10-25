@@ -1,0 +1,99 @@
+//*******************************************************
+// Assignment 4
+// Jose Soto
+// Parallel Programming Date: Date of Submission
+//*******************************************************
+// Documentation: This program will compute FFT Radix-2
+// with 8192 Samples. The host will create the sample
+// table.
+//*******************************************************
+//*******************************************************
+#include <math.h>
+#include <stdio.h>
+
+const int SIZE = 8192;
+const int BLOCKS = 4;
+const int MAX_THREAD = 1024;
+const double PI = 6.283185307179586;
+
+////////////////////////////////////////////////////////////
+/*
+Function Name: compute
+Parameters:
+Retunrn type: Void
+Description:
+
+*/
+__global__
+void compute(double* k_vector_real, double *k_vector_imag, double PC, double* real_sample, double* imag_sample)
+{
+  int k = blockIdx.x * blockDim.x + threadIdx.x;
+  double COS_PC, SIN_PC;
+  double EVEN_REAL, EVEN_IMAG, ODD_REAL, ODD_IMAG;
+  PC *= k;
+  for (int m = 0; m < SIZE; m++)
+  {
+    PC *= m;
+    COS_PC = cos(PC);
+    SIN_PC = sin(PC);
+    EVEN_REAL += real_sample[m+m] * COS_PC + imag_sample[m+m+SIZE] * SIN_PC;
+    ODD_REAL += real_sample[m+m+1] * COS_PC + imag_sample[m+m+1+SIZE] * SIN_PC;
+    EVEN_IMAG += imag_sample[m+m+SIZE] * COS_PC + real_sample[m+m] * SIN_PC;
+    ODD_IMAG += imag_sample[m+m+1+SIZE] * COS_PC + real_sample[m+m+1] * SIN_PC;
+  } 
+  PC = PI * k / SIZE; //twiddle factor
+  COS_PC = cos(PC);
+  SIN_PC = sin(PC);
+  ODD_REAL = ODD_REAL * COS_PC + ODD_IMAG * SIN_PC;
+  ODD_IMAG = ODD_IMAG * COS_PC + ODD_REAL * SIN_PC;
+  k_vector_real[k] = EVEN_REAL + ODD_REAL;
+  k_vector_imag[k] = EVEN_IMAG + ODD_IMAG;
+  k_vector_real[k+(SIZE/2)] = EVEN_REAL + ODD_REAL;
+  k_vector_imag[k+(SIZE/2)] = EVEN_IMAG + ODD_IMAG;
+}
+
+int main(void) {
+  double PC = PI / (SIZE / 2);
+  double k_vector_real[SIZE], k_vector_imag[SIZE];
+  double real_sample[SIZE] = {3.6, 2.9, 5.6, 4.8, 3.3, 5.9, 5.0, 4.3};
+  double imag_sample[SIZE] = {2.6, 6.3, 4.0, 9.1, 0.4, 4.8, 2.6, 4.1};
+
+  double *real_sample_d, imag_sample_d, *k_vector_real_d, k_vector_imag_d;
+  int size_d = SIZE * sizeof(double);
+
+  cudaMalloc((void**) &real_sample_d, size_d);
+  cudaMalloc((void**) &imag_sample_d, size_d);
+  cudaMalloc((void**) &k_vector_real_d, size_d);
+  cudaMalloc((void**) &k_vector_imag_d, size_d);
+
+  cudaMemcpy(real_sample_d, real_sample, size_d, cudaMemcpyHostToDevice);
+  cudaMemcpy(imag_sample_d, imag_sample, size_d, cudaMemcpyHostToDevice);
+  
+  dim3 dimGrid(BLOCKS,0);
+  dim3 dimBlock(MAX_THREAD,0);
+  compute <<< dimGrid, dimBlock >>> (k_vector_real_d, k_vector_imag, PC, real_sample_d, imag_sample_d);
+  
+  cudaMemcpy(k_vector_real, k_vector_real_d, size_d, cudaMemcpyDeviceToHost);
+  cudaMemcpy(k_vector_imag, k_vector_imag_d, size_d, cudaMemcpyDeviceToHost);
+
+  for (int i = 0; i < 100; i++)
+  {
+      printf("%f \n",k_vector_real[i]);
+  }   
+  
+    // printf("\nTOTAL PROCESSED SAMPLES : %d\n",SIZE);
+    // printf("================================\n");
+    // for (int i = 0; i < 8; i++)
+    // {
+    //   printf("XR[%d]: %.6f XI[%d]: %.6f \n", i, k_vector[i][0], k_vector[i][1]);
+    //   printf("=====================================\n");
+    // }
+  
+
+  cudaFree(k_vector_imag_d);
+  cudaFree(k_vector_real_d);
+  cudaFree(real_sample_d);
+  cudaFree(imag_sample_d);
+
+  return 0;
+}
