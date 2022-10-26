@@ -1,7 +1,7 @@
 //*******************************************************
 // Assignment 4
-// Jose Soto
-// Parallel Programming Date: Date of Submission
+// Jose Soto and Nathan Van De Vyvere
+// Parallel Programming Date: 
 //*******************************************************
 // Documentation: This program will compute FFT Radix-2
 // with 8192 Samples. The host will create the sample
@@ -16,21 +16,24 @@ const int BLOCKS = 4;
 const int MAX_THREAD = 1024;
 const double PI = 6.283185307179586;
 
-////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
 /*
 Function Name: compute
-Parameters:
-Retunrn type: Void
-Description:
-
+Parameters: double* k_vector_real, double* k_vector_imag, double* real_sample, double* imag_sample
+Retunrn type: void
+Description: This kernal will do the computations for each sample of the FFT. The kernal brings in
+the sample data from the host. Each thread will calculate the even and odd parts for the k that 
+matches its global index. The computed data is indexed into an array an passed back to the host.
 */
+//////////////////////////////////////////////////////////////////////////////////////////////////
 __global__
-void compute(double* k_vector_real, double *k_vector_imag, double PC, double* real_sample, double* imag_sample)
+void compute(double* k_vector_real, double *k_vector_imag, double* real_sample, double* imag_sample)
 {
-  int k = blockIdx.x * blockDim.x + threadIdx.x;
-  double COS_PC, SIN_PC;
-  double EVEN_REAL, EVEN_IMAG, ODD_REAL, ODD_IMAG;
-  PC *= k;
+  int k = blockIdx.x * blockDim.x + threadIdx.x;          // global index
+  double COS_PC, SIN_PC, PC;                              // variables for the pi constant
+  double EVEN_REAL, EVEN_IMAG, ODD_REAL, ODD_IMAG;        // variables for calculations
+
+  // summation loop for both the even and odd parts
   for (int m = 0; m < SIZE/2; m++)
   {
     PC = (PI * m * k)/(SIZE/2);
@@ -41,7 +44,7 @@ void compute(double* k_vector_real, double *k_vector_imag, double PC, double* re
     EVEN_IMAG += imag_sample[m+m] * COS_PC - real_sample[m+m] * SIN_PC;
     ODD_IMAG += imag_sample[m+m+1] * COS_PC - real_sample[m+m+1] * SIN_PC;
   } 
-  PC = PI * k / SIZE; //twiddle factor
+  PC = PI * k / SIZE;   //twiddle factor
   COS_PC = cos(PC);
   SIN_PC = sin(PC);
   ODD_REAL = ODD_REAL * COS_PC + ODD_IMAG * SIN_PC;
@@ -52,8 +55,17 @@ void compute(double* k_vector_real, double *k_vector_imag, double PC, double* re
   k_vector_imag[k+(SIZE/2)] = EVEN_IMAG - ODD_IMAG;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+Function Name: compute
+Parameters: double* k_vector_real, double* k_vector_imag, double* real_sample, double* imag_sample
+Retunrn type: void
+Description: This kernal will do the computations for each sample of the FFT. The kernal brings in
+the sample data from the host. Each thread will calculate the even and odd parts for the k that 
+matches its global index. The computed data is indexed into an array an passed back to the host.
+*/
+//////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void) {
-  double PC = PI / (SIZE / 2);
   double k_vector_real[SIZE], k_vector_imag[SIZE];
   double real_sample[SIZE] = {3.6, 2.9, 5.6, 4.8, 3.3, 5.9, 5.0, 4.3};
   double imag_sample[SIZE] = {2.6, 6.3, 4.0, 9.1, 0.4, 4.8, 2.6, 4.1};
@@ -71,7 +83,7 @@ int main(void) {
   
   dim3 dimGrid(BLOCKS,1);
   dim3 dimBlock(MAX_THREAD,1);
-  compute <<< dimGrid, dimBlock >>> (k_vector_real_d, k_vector_imag_d, PC, real_sample_d, imag_sample_d);
+  compute <<< dimGrid, dimBlock >>> (k_vector_real_d, k_vector_imag_d, real_sample_d, imag_sample_d);
   
   cudaMemcpy(k_vector_real, k_vector_real_d, size_d, cudaMemcpyDeviceToHost);
   cudaMemcpy(k_vector_imag, k_vector_imag_d, size_d, cudaMemcpyDeviceToHost);
