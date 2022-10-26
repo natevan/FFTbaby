@@ -31,7 +31,7 @@ void compute(double* k_vector_real, double *k_vector_imag, double PC, double* re
   double COS_PC, SIN_PC;
   double EVEN_REAL, EVEN_IMAG, ODD_REAL, ODD_IMAG;
   PC *= k;
-  for (int m = 0; m < SIZE; m++)
+  for (int m = 0; m < SIZE/2; m++)
   {
     PC = (PI * m * k)/(SIZE/2);
     COS_PC = cos(PC);
@@ -55,8 +55,6 @@ void compute(double* k_vector_real, double *k_vector_imag, double PC, double* re
 int main(void) {
   double PC = PI / (SIZE / 2);
   double k_vector_real[SIZE], k_vector_imag[SIZE];
-  //double * real_sample = (double *)malloc(SIZE * sizeof(double));
-  //real_sample[0] = 5;
   double real_sample[SIZE] = {3.6, 2.9, 5.6, 4.8, 3.3, 5.9, 5.0, 4.3};
   double imag_sample[SIZE] = {2.6, 6.3, 4.0, 9.1, 0.4, 4.8, 2.6, 4.1};
 
@@ -88,12 +86,10 @@ int main(void) {
     printf("=====================================\n");
   }
 
-/*
   cudaFree(k_vector_imag_d);
   cudaFree(k_vector_real_d);
   cudaFree(real_sample_d);
   cudaFree(imag_sample_d);
-*/
 
   return 0;
 }
