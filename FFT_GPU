@@ -1,13 +1,18 @@
-//*******************************************************
+//**************************************************************
 // Assignment 4
 // Jose Soto and Nathan Van De Vyvere
-// Parallel Programming Date: 
-//*******************************************************
+// Parallel Programming Date: 11/03/2022
+//**************************************************************
+// Runs on maverick2
+// sbatch a5Script
+//
 // Documentation: This program will compute FFT Radix-2
 // with 8192 Samples. The host will create the sample
-// table.
-//*******************************************************
-//*******************************************************
+// table. The host calls the compute kernal where the device
+// will divide up the discete FFT to be computed.
+//*************************************************************
+//*************************************************************
+
 #include <math.h>
 #include <stdio.h>
 
@@ -26,6 +31,7 @@ the sample data from the host. Each thread will calculate the even and odd parts
 matches its global index. The computed data is indexed into an array an passed back to the host.
 */
 //////////////////////////////////////////////////////////////////////////////////////////////////
+
 __global__
 void compute(double* k_vector_real, double *k_vector_imag, double* real_sample, double* imag_sample)
 {
@@ -67,16 +73,6 @@ void compute(double* k_vector_real, double *k_vector_imag, double* real_sample, 
   k_vector_imag[k+(SIZE/2)] = EVEN_IMAG - ODD_IMAG;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-Function Name: compute
-Parameters: double* k_vector_real, double* k_vector_imag, double* real_sample, double* imag_sample
-Retunrn type: void
-Description: This kernal will do the computations for each sample of the FFT. The kernal brings in
-the sample data from the host. Each thread will calculate the even and odd parts for the k that 
-matches its global index. The computed data is indexed into an array an passed back to the host.
-*/
-//////////////////////////////////////////////////////////////////////////////////////////////////
 int main(void) {
   double k_vector_real[SIZE], k_vector_imag[SIZE];
   double real_sample[SIZE] = {3.6, 2.9, 5.6, 4.8, 3.3, 5.9, 5.0, 4.3};
