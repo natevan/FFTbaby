@@ -5,9 +5,9 @@
 
 using namespace std;
 
-#define samples 8192
-#define a 2
-#define b 4
+#define samples 1024
+#define a 0
+#define b 2
 
 __global__
 void MC(double* answer_d){
@@ -16,36 +16,38 @@ void MC(double* answer_d){
     curand_init(123, i, 654, &state);
 
     double x, y;
-    double bounding_box, box_height, box_width, upper_limit, answer, local_max;
-    int count;
+    double bounding_box, box_height, box_width, upper_limit, local_max;
+    int count = 0;
 
     local_max = box_height = 0;
     box_width = b - a;
     // y = x^4
-    for (int i = 0; i < 100; i++)
+    for (int j = 0; j < samples; j++)
     {
-        count = 0;
-        for (int j = 0; j < samples; j++)
-        {
-            x = (b-a)*curand_uniform(&state)+a;
-            local_max = pow(x, 4);
-            box_height = max(local_max, box_height);
-        }
-        bounding_box = box_height * box_width;
-        
-        count = 0;
-        for (int j = 0; j < samples; j++)
-        {
-            x = (b-a)*curand_uniform(&state)+a;
-            y = box_height * curand_uniform(&state);
-            upper_limit = pow(x, 4);
-            if (y <= upper_limit)
-            {
-                count++;
-            }
-        }
-        answer_d[i] = ((double)count / samples) * bounding_box;
+        x = (b-a)*curand_uniform(&state)+a;
+        local_max = pow(x, 4);
+        box_height = max(local_max, box_height);
     }
+    bounding_box = box_height * box_width;
+    
+    for (int j = 0; j < samples; j++)
+    {
+        x = (b-a)*curand_uniform(&state)+a;
+        y = box_height * curand_uniform(&state);
+        upper_limit = pow(x, 4);
+        if (y <= upper_limit)
+        {
+            count = 9;
+            printf("count++ %f\n", count);
+        }
+    }
+    /*
+    if(i == 0)
+    {
+        printf("count %f samples %f box height %f  box width %f bounding box %f\n", count, samples, box_height, box_width, bounding_box);
+    }
+    answer_d[i] = ((double)count / samples) * bounding_box;
+    */
 }
 
 int main()
@@ -60,8 +62,10 @@ int main()
     cudaDeviceSynchronize();
     cudaMemcpy(answer, answer_d, size, cudaMemcpyDeviceToHost);
     for (int i = 0; i<samples; i++)
+    /*
     {
         printf("%f\n", answer[i]);
     }
+    */
     return 0;
 }
