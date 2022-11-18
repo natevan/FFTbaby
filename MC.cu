@@ -5,53 +5,47 @@
 
 using namespace std;
 
-#define samples 1024
+#define samples 16384
+#define MAX_BLOCKS 8
+#define MAX_THREADS 1024
 #define a 0
 #define b 2
 
 __global__
-void MC(double* answer_d){
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
+void MC(double* answer_d, int multiple){
     curandState state;
+    int i = (threadIdx.x + blockIdx.x * blockDim.x);
     curand_init(123, i, 654, &state);
+    int offset = MAX_THREADS * MAX_BLOCKS;
 
     double x, y;
     double bounding_box, box_height, box_width, upper_limit, local_max;
-    int count = 0;
-
-    local_max = box_height = 0;
-    box_width = b - a;
-    // y = x^4
-    for (int j = 0; j < samples; j++)
+    for(int m = 0; m < multiple; m++)
     {
-        x = (b-a)*curand_uniform(&state)+a;
-        local_max = pow(x, 4);
-        box_height = max(local_max, box_height);
-    }
-    bounding_box = box_height * box_width;
-    
-    //count = 9;
-    for (int j = 0; j < samples; j++)
-    {
-        x = (b-a)*curand_uniform(&state)+a;
-        y = box_height * curand_uniform(&state);
-        upper_limit = pow(x, 4);
-        if (y <= upper_limit)
+        int idx = (threadIdx.x + blockIdx.x * blockDim.x) + (offset * m);
+        int count = 0;
+        local_max = box_height = 0;
+        box_width = b - a;
+        // y = x^4
+        for (int j = 0; j < samples; j++)
         {
-            count++;
-            //printf("count++ %d\n", count);
+            x = (b-a)*curand_uniform(&state)+a;
+            local_max = pow(x, 4);
+            box_height = max(local_max, box_height);
         }
+        bounding_box = box_height * box_width;
+        for (int j = 0; j < samples; j++)
+        {
+            x = (b-a)*curand_uniform(&state)+a;
+            y = box_height * curand_uniform(&state);
+            upper_limit = pow(x, 4);
+            if (y <= upper_limit)
+            {
+                count++;
+            }
+        }
+        answer_d[idx] = (double(count)/samples)*bounding_box; 
     }
-    //printf("Bounding Box After%f\n", (double(count)/samples)*bounding_box);
-    answer_d[i] = (double(count)/samples)*bounding_box; 
-    //printf("%f", answer_d[i]);
-    /*
-    if(i == 0)
-    {
-        printf("count %d samples %f box height %f  box width %f bounding box %f\n", count, samples, box_height, box_width, bounding_box);
-    }
-    answer_d[i] = ((double)count / samples) * bounding_box;
-    */
 }
 
 int main()
@@ -61,16 +55,20 @@ int main()
     double *answer_d;
     double sum = 0;
     cudaMalloc((void**) &answer_d, size);
-    dim3 block(1, 1);
-    dim3 blockdim(1024, 1);
-    MC <<< block, blockdim>>> (answer_d);
+    dim3 block(MAX_BLOCKS, 1);
+    dim3 blockdim(MAX_THREADS, 1);
+    int MULTIPLE = samples/(MAX_BLOCKS*MAX_THREADS);
+    printf("Luanching kernel with %d blocks with %d threads each\n", MAX_BLOCKS, MAX_THREADS);
+    MC <<< block, blockdim>>> (answer_d, MULTIPLE);
     cudaDeviceSynchronize();
     cudaMemcpy(answer, answer_d, size, cudaMemcpyDeviceToHost);
+    cudaFree(answer_d);
     for (int i = 0; i<samples; i++)
     {
         sum += answer[i];
     }
     double avg = sum/samples;
     printf("Answer: %f\n", avg);
+    free(answer);
     return 0;
 }
