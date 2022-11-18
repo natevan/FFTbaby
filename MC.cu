@@ -5,8 +5,8 @@
 
 using namespace std;
 
-#define samples 16384
-#define MAX_BLOCKS 8
+#define samples 131072
+#define MAX_BLOCKS 64
 #define MAX_THREADS 1024
 #define a 0
 #define b 2
@@ -59,6 +59,7 @@ int main()
     dim3 blockdim(MAX_THREADS, 1);
     int MULTIPLE = samples/(MAX_BLOCKS*MAX_THREADS);
     printf("Luanching kernel with %d blocks with %d threads each\n", MAX_BLOCKS, MAX_THREADS);
+    printf("Samples Computed: %d\n", samples);
     MC <<< block, blockdim>>> (answer_d, MULTIPLE);
     cudaDeviceSynchronize();
     cudaMemcpy(answer, answer_d, size, cudaMemcpyDeviceToHost);
