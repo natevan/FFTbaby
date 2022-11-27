@@ -1,11 +1,11 @@
 //Jose Soto and Nathan Van De Vyvere
 
 //This program will compute the Monte Carlo estimation of
-//4 randomly generated polynomials 
+//5 randomly generated polynomials 
 #include <math.h>
 #include <random>
 #include <stdio.h>
-#include <time.h>
+#include "timer.h"
 
 using namespace std;
 
@@ -36,13 +36,13 @@ int main() {
   }
   printf("Samples Processed: %d\n\n", samples);
   //Timimg variables
-  clock_t start, end;
-  double cpu_time_used;
-  start = clock();
+  double start, finish, elapsed;
   //Bounding box variables for Monte Carlo
   double x, y;
   double bounding_box, box_height, box_width, upper_limit, answer[p], local_max;
   int count;
+
+  GET_TIME(start);
   local_max = box_height = 0;
   uniform_real_distribution<double> x_sample(a, b);
   box_width = b - a;
@@ -82,14 +82,13 @@ int main() {
   for (int i = 0; i < p; i++) {
     answer[i] /= samples;
   }
-  end = clock();
-  cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+  GET_TIME(finish);
+  elapsed = (finish - start) * 1000;
   //Printing routine
   for (int i = 0; i < p; i++) {
     printf("Expression: %dx^5 + %dx^3 + %dx^4\n", exps[i].three, exps[i].two, exps[i].one);
     printf("Result: %f\n\n", answer[i]);
   }
-  printf("Time used %f\n", cpu_time_used);
-  printf("Average time used %f", cpu_time_used / p);
+  printf("Time taken %f ms\n", elapsed);
   return 0;
 }
