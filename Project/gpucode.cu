@@ -2,6 +2,7 @@
 #include <random>
 #include <math.h>
 #include <curand_kernel.h>
+#include <cuda_runtime.h>
 
 using namespace std;
 
@@ -65,6 +66,9 @@ void MC(double* answer_d, polynomial * exps){
 
 int main()
 {
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
     // var for allocating memory
     int size = sizeof(double)*TOTAL_THREADS;
     int poly_size = sizeof(polynomial)*PROBLEM_SIZE;
@@ -94,6 +98,7 @@ int main()
     dim3 blockdim(MAX_THREADS, 1);
     printf("Launching kernel with %d blocks with %d threads each\n", MAX_BLOCKS, MAX_THREADS);
     printf("Samples Computed: %d\n", samples);
+    cudaEventRecord(start);
     // calls the GPU kernal
     MC <<< block, blockdim>>> (answer_d, exps_d);
     // cudaDeviceSynchronize();
@@ -112,11 +117,16 @@ int main()
             sum[i % PROBLEM_SIZE] += answer[j + offset];
         }
     }
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float time = 0;
+    cudaEventElapsedTime(&time, start, stop);
     for (int i = 0; i < PROBLEM_SIZE; i++)
     {
         printf("Coefficients: %d %d %d  \n", exps[i].three, exps[i].two, exps[i].one);
         printf("Answer %d: %f\n", i+1, sum[i]);
     }
+    printf("Time taken: %f ms", time);
     free(answer);
     return 0;
 }
