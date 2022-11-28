@@ -1,7 +1,15 @@
-//Jose Soto and Nathan Van De Vyvere
+/***************************************************************************
+**  HPC Project -- Monte Carlo Method
+**  Jose Soto and Nathan Van De Vyvere
+**  November 28, 2022
+****************************************************************************
+**  This program will compute the Monte Carlo estimation of
+**  5 randomly generated polynomials 
+****************************************************************************
+**  Runs on maverick2
+**  sbatch serialScript
+***************************************************************************/
 
-//This program will compute the Monte Carlo estimation of
-//5 randomly generated polynomials 
 #include <math.h>
 #include <random>
 #include <stdio.h>
