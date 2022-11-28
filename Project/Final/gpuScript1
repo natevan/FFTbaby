@@ -31,7 +31,7 @@ module load cuda/10.1
 # -o is a compilation flag
 # a.out is the name of your executable
 
-nvcc SotoVanDeVyvere_GPU.cu -o gpu1.out
+nvcc SotoVanDeVyvere_GPU_8k.cu -o gpu1.out
 
 #============================
 # LAUNCH YOUR EXECUTABLE
