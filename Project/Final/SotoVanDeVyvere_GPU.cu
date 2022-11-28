@@ -7,7 +7,7 @@
 **  polynomials using the Monte Carlo mehtod.
 ****************************************************************************
 **  Runs on maverick2
-**  sbatch gpuScript
+**  sbatch gpuScript1
 ***************************************************************************/
 #include <stdio.h>
 #include <random>
@@ -20,7 +20,7 @@ using namespace std;
 // error handling and debugging
 #define CUDA_CALL(x) {cudaError_t cuda_error__ = (x); if (cuda_error__) printf("CUDA error: " #x " returned \"%s\"\n", cudaGetErrorString(cuda_error__));}
 
-
+// number of expressions
 #define PROBLEM_SIZE 5
 #define BLOCKS_PER_PROBLEM 8
 #define MAX_THREADS 1024
