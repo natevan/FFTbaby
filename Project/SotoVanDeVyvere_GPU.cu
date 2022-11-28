@@ -1,3 +1,14 @@
+/***************************************************************************
+**  HPC Project -- Monte Carlo Method
+**  Jose Soto and Nathan Van De Vyvere
+**  November 28, 2022
+****************************************************************************
+**  This program will approimate integrals on randomly generated 3 term 
+**  polynomials using the Monte Carlo mehtod.
+****************************************************************************
+**  Runs on maverick2
+**  sbatch gpuScript
+***************************************************************************/
 #include <stdio.h>
 #include <random>
 #include <math.h>
