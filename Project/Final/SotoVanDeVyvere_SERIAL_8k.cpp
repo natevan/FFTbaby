@@ -7,7 +7,7 @@
 **  5 randomly generated polynomials 
 ****************************************************************************
 **  Runs on maverick2
-**  sbatch serialScript
+**  sbatch serialScript1
 ***************************************************************************/
 
 #include <math.h>
